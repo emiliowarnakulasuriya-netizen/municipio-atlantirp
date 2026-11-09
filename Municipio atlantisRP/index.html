@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcolatrice Scontrini - Municipio AtlantisRP</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+    <!-- Schermata di Login -->
+    <div id="loginScreen" class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center p-4">
+        <div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl text-center backdrop-blur-xl">
+            <div class="w-16 h-16 bg-indigo-600/20 text-indigo-400 rounded-2xl flex items-center justify-center mx-auto mb-5 border border-indigo-500/30 text-2xl">
+                <i class="fa-solid fa-building-columns"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-white mb-2">Municipio AtlantisRP</h1>
+            <p class="text-sm text-slate-400 mb-6">Inserisci il tuo nome e seleziona il tuo ruolo per accedere.</p>
+            
+            <form onsubmit="handleLogin(event)" class="space-y-4 text-left">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Il tuo Nome / Nickname</label>
+                    <input type="text" id="loginUsername" required placeholder="Es. Mario Rossi" 
+                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Seleziona Ruolo</label>
+                    <select id="loginRole" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all">
+                        <option value="dipendente">Dipendente Standard</option>
+                        <option value="superiore">Superiore (Direttore / Vicedirettore)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 cursor-pointer mt-2">
+                    <i class="fa-solid fa-right-to-bracket"></i> Accedi al Gestionale
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Interfaccia Principale -->
+    <div id="appContent" class="hidden flex-col min-h-screen justify-between">
+        <!-- Header -->
+        <header class="bg-slate-900 border-b border-slate-800 py-4 px-6 shadow-lg">
+            <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-indigo-600/20 text-indigo-400 p-2.5 rounded-xl border border-indigo-500/30">
+                        <i class="fa-solid fa-building-columns text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold tracking-tight text-white">Municipio AtlantisRP</h1>
+                        <p class="text-xs text-slate-400" id="headerSubtitle">Gestionale Scontrini</p>
+                    </div>
+                </div>
+
+                <!-- Profilo Utente -->
+                <div class="flex items-center gap-3 bg-slate-800/80 px-4 py-1.5 rounded-full border border-slate-700/60">
+                    <div class="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-xs" id="userInitial">U</div>
+                    <div>
+                        <span id="userName" class="text-xs font-semibold text-white block">Utente</span>
+                        <span id="userBadgeRole" class="text-[10px] text-indigo-400 font-medium block">Dipendente</span>
+                    </div>
+                    <button onclick="logout()" class="text-slate-400 hover:text-rose-400 ml-3 transition-colors cursor-pointer" title="Esci">
+                        <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-4xl w-full mx-auto p-4 sm:p-6 flex-grow">
+            
+            <!-- Dashboard Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                
+                <!-- Form Inserimento -->
+                <div class="lg:col-span-2 bg-slate-900/80 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl backdrop-blur-sm">
+                    <h2 class="text-base font-semibold text-white mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-receipt text-indigo-400"></i> Registra Nuovo Scontrino
+                    </h2>
+                    
+                    <form id="receiptForm" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1.5">Nome Cliente</label>
+                                <input type="text" id="clientName" required placeholder="Es. Mario Rossi" 
+                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1.5">Servizio / Causale</label>
+                                <input type="text" id="serviceType" required placeholder="Es. Carta d'Identità" 
+                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5">Importo ($)</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500 font-medium">$</span>
+                                <input type="number" id="amount" required min="1" placeholder="0.00" 
+                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all">
+                            </div>
+                        </div>
+
+                        <button type="submit" 
+                            class="w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-xl transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-plus text-xs"></i> Aggiungi Scontrino
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Riepilogo Rapido -->
+                <div class="bg-gradient-to-br from-indigo-950/40 via-slate-900 to-slate-900 border border-indigo-900/40 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <h2 class="text-xs font-semibold uppercase tracking-wider text-indigo-400 mb-1" id="boxTitle">Totale Tuo Fatturato</h2>
+                        <div class="text-3xl font-extrabold text-white mt-2 mb-1" id="totalAmount">$0</div>
+                        <p class="text-xs text-slate-400"><span id="receiptCount">0</span> scontrini registrati</p>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-slate-800/80 flex flex-col gap-2.5">
+                        <button onclick="copyReport()" 
+                            class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium py-2 px-3 rounded-xl transition-all border border-slate-700 flex items-center justify-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-copy text-indigo-400"></i> Copia Report per Telegram
+                        </button>
+                        <button onclick="clearReceipts()" id="clearBtn"
+                            class="w-full bg-rose-950/30 hover:bg-rose-900/40 text-rose-400 text-xs font-medium py-2 px-3 rounded-xl transition-all border border-rose-900/30 flex items-center justify-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-trash-can"></i> Pulisci Turno
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Pannello Superiore (Filtri) -->
+            <div id="superiorPanel" class="hidden mb-6 bg-amber-950/20 border border-amber-900/40 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-amber-200">Area Direzione / Supervisione</h3>
+                        <p class="text-xs text-slate-400">Controllo completo di tutti i scontrini del Municipio.</p>
+                    </div>
+                </div>
+                <div class="w-full sm:w-auto flex items-center gap-2">
+                    <label class="text-xs text-slate-400 whitespace-nowrap">Filtra dipendente:</label>
+                    <select id="employeeFilter" onchange="renderReceipts()" class="bg-slate-950 border border-slate-800 text-xs text-white rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500">
+                        <option value="ALL">Tutti i dipendenti</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Tabella Storico Scontrini -->
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl shadow-xl overflow-hidden backdrop-blur-sm">
+                <div class="p-4 sm:p-5 border-b border-slate-800 flex justify-between items-center">
+                    <h3 class="font-semibold text-sm text-white flex items-center gap-2">
+                        <i class="fa-solid fa-list-ul text-indigo-400"></i> Storico Scontrini
+                    </h3>
+                    <span class="text-xs bg-slate-800 text-slate-400 px-2.5 py-1 rounded-full border border-slate-700/50" id="badgeCount">0 voci</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-950/60 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-800">
+                                <th class="py-3 px-4 font-medium">Orario</th>
+                                <th class="py-3 px-4 font-medium">Dipendente</th>
+                                <th class="py-3 px-4 font-medium">Cliente</th>
+                                <th class="py-3 px-4 font-medium">Servizio</th>
+                                <th class="py-3 px-4 font-medium text-right">Importo</th>
+                                <th class="py-3 px-4 font-medium text-center">Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="receiptsTableBody" class="divide-y divide-slate-800/60 text-sm">
+                            <!-- Righe dinamiche -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="emptyState" class="py-12 text-center text-slate-500">
+                    <i class="fa-solid fa-receipt text-3xl mb-2 text-slate-700"></i>
+                    <p class="text-sm">Nessuno scontrino registrato.</p>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-slate-900 border-t border-slate-800 py-4 px-6 text-center text-xs text-slate-500 mt-8">
+            Municipio AtlantisRP • Strumento interno per dipendenti
+        </footer>
+    </div>
+
+    <!-- Script Logica -->
+    <script>
+        const loginScreen = document.getElementById('loginScreen');
+        const appContent = document.getElementById('appContent');
+        const userNameEl = document.getElementById('userName');
+        const userInitialEl = document.getElementById('userInitial');
+        const userBadgeRole = document.getElementById('userBadgeRole');
+        const superiorPanel = document.getElementById('superiorPanel');
+        const boxTitle = document.getElementById('boxTitle');
+        const clearBtn = document.getElementById('clearBtn');
+        const employeeFilter = document.getElementById('employeeFilter');
+
+        let currentUser = JSON.parse(localStorage.getItem('atlantis_current_user')) || null;
+        
+        // CHIAVE UNICA CONDIVISA per tutti i scontrini del Municipio
+        const STORAGE_KEY = 'atlantis_municipio_master_receipts';
+        let receipts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+        function checkAuth() {
+            if (currentUser) {
+                loginScreen.classList.add('hidden');
+                appContent.classList.remove('hidden');
+                appContent.classList.add('flex');
+                userNameEl.textContent = currentUser.name;
+                userInitialEl.textContent = currentUser.name.charAt(0).toUpperCase();
+                
+                if (currentUser.role === 'superiore') {
+                    userBadgeRole.textContent = 'Direzione / Superiore';
+                    userBadgeRole.className = 'text-[10px] text-amber-400 font-bold block';
+                    superiorPanel.classList.remove('hidden');
+                    superiorPanel.classList.add('flex');
+                    boxTitle.textContent = 'Fatturato Totale Municipio';
+                    clearBtn.style.display = 'flex';
+                } else {
+                    userBadgeRole.textContent = 'Dipendente';
+                    userBadgeRole.className = 'text-[10px] text-indigo-400 font-medium block';
+                    superiorPanel.classList.add('hidden');
+                    boxTitle.textContent = 'Totale Tuo Fatturato';
+                }
+                updateEmployeeFilterOptions();
+                renderReceipts();
+            } else {
+                loginScreen.classList.remove('hidden');
+                appContent.classList.add('hidden');
+                appContent.classList.remove('flex');
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const name = document.getElementById('loginUsername').value.trim();
+            const role = document.getElementById('loginRole').value;
+            
+            if (name) {
+                if (role === 'superiore') {
+                    const password = prompt("Inserisci la password segreta della Direzione:");
+                    const PASSWORD_SEGRETA = "atlantis2026"; 
+                    
+                    if (password !== PASSWORD_SEGRETA) {
+                        alert("Password errata! Accesso come superiore negato.");
+                        return;
+                    }
+                }
+
+                currentUser = { name, role };
+                localStorage.setItem('atlantis_current_user', JSON.stringify(currentUser));
+                checkAuth();
+            }
+        }
+
+        function logout() {
+            if (confirm('Vuoi effettuare il logout?')) {
+                localStorage.removeItem('atlantis_current_user');
+                currentUser = null;
+                checkAuth();
+            }
+        }
+
+        checkAuth();
+
+        const receiptForm = document.getElementById('receiptForm');
+        const clientNameInput = document.getElementById('clientName');
+        const serviceTypeInput = document.getElementById('serviceType');
+        const amountInput = document.getElementById('amount');
+        const receiptsTableBody = document.getElementById('receiptsTableBody');
+        const totalAmountEl = document.getElementById('totalAmount');
+        const receiptCountEl = document.getElementById('receiptCount');
+        const badgeCountEl = document.getElementById('badgeCount');
+        const emptyState = document.getElementById('emptyState');
+
+        function saveAndRender() {
+            // Ricarica prima i dati dal master storage per sicurezza
+            receipts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(receipts));
+            updateEmployeeFilterOptions();
+            renderReceipts();
+        }
+
+        receiptForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // Prende i dati aggiornati prima di inserire
+            receipts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+            const newReceipt = {
+                id: Date.now(),
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                employee: currentUser.name,
+                client: clientNameInput.value.trim(),
+                service: serviceTypeInput.value.trim(),
+                amount: parseFloat(amountInput.value)
+            };
+
+            receipts.push(newReceipt);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(receipts));
+
+            clientNameInput.value = '';
+            serviceTypeInput.value = '';
+            amountInput.value = '';
+            clientNameInput.focus();
+
+            renderReceipts();
+        });
+
+        function deleteReceipt(id) {
+            receipts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+            receipts = receipts.filter(r => r.id !== id);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(receipts));
+            renderReceipts();
+        }
+
+        function clearReceipts() {
+            if (confirm('Sei sicuro di voler azzerare tutti gli scontrini salvati nel sistema?')) {
+                receipts = [];
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(receipts));
+                renderReceipts();
+            }
+        }
+
+        function updateEmployeeFilterOptions() {
+            if (!currentUser || currentUser.role !== 'superiore') return;
+            receipts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+            const currentSelected = employeeFilter.value;
+            const employees = [...new Set(receipts.map(r => r.employee))];
+            
+            employeeFilter.innerHTML = '<option value="ALL">Tutti i dipendenti</option>';
+            employees.forEach(emp => {
+                const opt = document.createElement('option');
+                opt.value = emp;
+                opt.textContent = emp;
+                if (emp === currentSelected) opt.selected = true;
+                employeeFilter.appendChild(opt);
+            });
+        }
+
+        function renderReceipts() {
+            // Sincronizza sempre i dati dal master storage ad ogni lettura
+            receipts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+            
+            receiptsTableBody.innerHTML = '';
+            let total = 0;
+            let displayedCount = 0;
+
+            let visibleReceipts = receipts;
+            if (currentUser.role !== 'superiore') {
+                // I dipendenti vedono solo i propri scontrini
+                visibleReceipts = receipts.filter(r => r.employee.toLowerCase() === currentUser.name.toLowerCase());
+            } else {
+                // I superiori possono filtrare per dipendente o vedere tutti
+                const selectedEmp = employeeFilter.value;
+                if (selectedEmp !== 'ALL') {
+                    visibleReceipts = receipts.filter(r => r.employee === selectedEmp);
+                }
+            }
+
+            if (visibleReceipts.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                visibleReceipts.forEach(r => {
+                    displayedCount++;
+                    
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-slate-800/40 transition-colors';
+                    row.innerHTML = `
+                        <td class="py-3 px-4 text-xs text-slate-400 whitespace-nowrap">${r.time}</td>
+                        <td class="py-3 px-4 text-indigo-300 text-xs font-medium">${escapeHtml(r.employee)}</td>
+                        <td class="py-3 px-4 text-white font-medium">${escapeHtml(r.client)}</td>
+                        <td class="py-3 px-4 text-slate-300">${escapeHtml(r.service)}</td>
+                        <td class="py-3 px-4 text-right font-semibold text-emerald-400">$${r.amount.toLocaleString()}</td>
+                        <td class="py-3 px-4 text-center">
+                            <button onclick="deleteReceipt(${r.id})" class="text-slate-500 hover:text-rose-400 p-1.5 transition-colors cursor-pointer" title="Elimina">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </td>
+                    `;
+                    receiptsTableBody.appendChild(row);
+                });
+            }
+
+            total = visibleReceipts.reduce((sum, r) => sum + r.amount, 0);
+
+            totalAmountEl.textContent = `$${total.toLocaleString()}`;
+            receiptCountEl.textContent = displayedCount;
+            badgeCountEl.textContent = `${displayedCount} ${displayedCount === 1 ? 'voce' : 'voci'}`;
+        }
+
+        function copyReport() {
+            receipts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+            let targetReceipts = receipts;
+            
+            if (currentUser.role !== 'superiore') {
+                targetReceipts = receipts.filter(r => r.employee.toLowerCase() === currentUser.name.toLowerCase());
+            } else {
+                const selectedEmp = employeeFilter.value;
+                if (selectedEmp !== 'ALL') {
+                    targetReceipts = receipts.filter(r => r.employee === selectedEmp);
+                }
+            }
+
+            if (targetReceipts.length === 0) {
+                alert('Nessun scontrino da esportare!');
+                return;
+            }
+
+            let total = targetReceipts.reduce((sum, r) => sum + r.amount, 0);
+            let report = `📊 **REPORT FATTURATO - ${currentUser.role === 'superiore' ? 'DIREZIONE' : currentUser.name.toUpperCase()}**\n`;
+            report += `📅 Totale Scontrini: ${targetReceipts.length}\n`;
+            report += `💰 **Fatturato Complessivo: $${total.toLocaleString()}**\n\n`;
+            report += `*Dettaglio:* \n`;
+            targetReceipts.forEach((r, index) => {
+                report += `${index + 1}. [${r.time}] Dipendente: *${r.employee}* | ${r.client} - ${r.service}: $${r.amount.toLocaleString()}\n`;
+            });
+
+            navigator.clipboard.writeText(report).then(() => {
+                alert('Report copiato negli appunti!');
+            }).catch(err => {
+                console.error('Errore nella copia:', err);
+            });
+        }
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+    </script>
+</body>
+</html>
